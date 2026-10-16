@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 🌟 1. ตาราง User สำหรับระบบ Login และกำหนดสิทธิ์ (VIEWER, CREATOR, ADMIN)
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String    // เก็บพาสเวิร์ดที่เข้ารหัสแล้ว
+  role      String    @default("VIEWER") // VIEWER, CREATOR, ADMIN
+  status    String    @default("ACTIVE") // ACTIVE, BLOCKED
+  projects  Project[] // ความสัมพันธ์ 1 User มีหลาย Project
+  createdAt DateTime  @default(now())
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  projects    Project[] 
+}
+
+model Project {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  imageUrl    String?   // ภาพปกหลัก (Main Image)
+  videoUrl    String?   // ลิงก์/ไฟล์วิดีโอ
+  documentUrl String?   // ลิงก์/ไฟล์เอกสาร
+  projectUrl  String?
+  authorName  String?   // 🌟 เก็บไว้เพื่อรองรับข้อมูลเก่า ไม่ให้โดนสั่งลบทิ้ง
+  location    String?   // 🌟 เพิ่มตัวแปรสำหรับเก็บสถานที่ (Location)
+
+  // 🌟 2. เชื่อมกับตาราง ProjectImage เพื่อให้อัปโหลดได้หลายรูปภาพ
+  images      ProjectImage[] 
+
+  categoryId  Int
+  category    Category  @relation(fields: [categoryId], references: [id])
+  
+  // 🌟 3. เชื่อมกับตาราง User อ้างอิงเจ้าของผลงาน
+  authorId    Int?
+  author      User?     @relation(fields: [authorId], references: [id])
+  
+  createdAt   DateTime  @default(now())
+}
+
+// 🌟 4. ตาราง ProjectImage สำหรับเก็บรูปภาพเพิ่มเติม (Gallery หลายรูป)
+model ProjectImage {
+  id        Int      @id @default(autoincrement())
+  url       String   // เก็บลิงก์หรือ Base64
+  projectId Int
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade) 
+}
