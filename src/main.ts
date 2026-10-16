@@ -1,17 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
-import { json, urlencoded } from 'express';
+import { json, urlencoded } from 'express'; // 🌟 1. เพิ่มบรรทัดนี้
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // เปิดให้หน้าบ้าน (พอร์ต 4200) ส่งข้อมูลมาหาหลังบ้านได้
-  app.enableCors(); 
+  // เปิดให้ Vercel เรียกใช้งานได้
+  app.enableCors();
   
-  // 🌟 ขยายขนาดประตูรับข้อมูลให้รองรับรูปภาพ Base64 ได้สูงสุด 50MB
+  // 🌟 2. เพิ่ม 2 บรรทัดนี้ เพื่อขยายขนาดข้อมูลที่รับได้ให้เป็น 50MB (รองรับรูป Base64)
   app.use(json({ limit: '50mb' }));
   app.use(urlencoded({ extended: true, limit: '50mb' }));
 
-  await app.listen(3000);
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
 }
 bootstrap();
